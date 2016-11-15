@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Group Chat</title>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script type ="text/javascript" src="/socket.io/socket.io.js"></script>
+        <script type ="text/javascript">
+            $(document).ready(function (){
+                $('#board').hide();
+                var socket = io.connect();
+
+                $('#form').submit(function(e) {
+                    e.preventDefault();
+                    socket.emit("name_input", {
+                        name: $('#name').val(),
+                    });
+                });
+
+                socket.on('show_chat', function(user, history) {
+                    $('#board').show()
+                    $('#login').hide()
+                    $('#username').html(user)
+                    var history_list = []
+                    for(var msgidx=0;msgidx<history.length; msgidx++){
+                        history_list.push('<p>'+history[msgidx]+'</p>')
+                    }
+                    $('#board_messages').html(history_list)
+                })
+
+                $('#message').submit(function(e, user) {
+                    e.preventDefault();
+                    socket.emit("message_input", {
+                        message: $('#message_body').val(),
+                    })
+                    $('#message_body').val('')
+                })
+
+                socket.on('update_board', function(history) {
+                    var history_list = []
+                    for(var msgidx=0;msgidx<history.length; msgidx++){
+                        history_list.push('<p>'+history[msgidx]+'</p>')
+                    }
+                    $('#board_messages').html(history_list)
+                })
+            })
+        </script>
+    </head>
+    <body>
+        <div id="login">
+            <h4>Enter your name:</h4>
+            <form id="form" action="/user">
+                <input id="name" type="text">
+                <input type="submit" value="OK">
+            </form>
+        </div>
+        <div id="board">
+            <h3>Conversation Board</h3>
+            <h3>Logged in as <span id="username"></span></h3>
+            <div id="board_messages"></div>
+            <form id='message' action='#'>
+                <input id='message_body' type='text' placeholder="enter your message here"/>
+                <input type='submit' value='Send'/>
+            </form>
+        </div>
+    </body>
+</html>
